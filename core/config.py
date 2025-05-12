@@ -7,9 +7,9 @@ class Settings(BaseSettings):
     DB_URL: str = Field(..., env="DB_URL")
     
     # Security
-    #SECRET_KEY: str = Field(..., min_length=32, env="SECRET_KEY")
-    #ALGORITHM: str = Field("HS256", env="ALGORITHM")
-    #ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    SECRET_KEY: str = Field(..., env="SECRET_KEY")
+    ALGORITHM: str = Field(default="HS256", env="ALGORITHM")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     
     # External Services
     class Config:
