@@ -29,11 +29,29 @@ class UserRepository:
             )
             return user
     
-    async def delete_user(self, username: str) -> bool:
+    async def delete_user(self, username: str) -> UserDB | None:
         async with db.get_connection() as conn:
-            result = await conn.execute(
-                "DELETE FROM users WHERE username = $1",
+            deleted_user = await conn.fetchrow(
+                "DELETE FROM users WHERE username = $1 RETURNING *",
                 username
             )
-            # Retorna True si se eliminó al menos un registro
-            return result.split()[-1] == '1'
+        return UserDB(**deleted_user) if deleted_user else None
+        
+    async def update_user(self, username: str, user_data: dict) -> UserDB:
+        async with db.get_connection() as conn:
+            query = """
+                UPDATE users 
+                SET full_name = COALESCE($2, full_name),
+                    email = COALESCE($3, email),
+                    disabled = COALESCE($4, disabled)
+                WHERE username = $1
+                RETURNING *
+            """
+            updated_user = await conn.fetchrow(
+                query,
+                username,
+                user_data.get("full_name"),
+                user_data.get("email"),
+                user_data.get("disabled")
+            )
+            return UserDB(**updated_user) if updated_user else None
