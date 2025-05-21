@@ -1,0 +1,22 @@
+# Entorno virtual
+.venv
+
+# Variables sensibles
+.env
+
+# Archivos del sistema
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Config del editor
+.vscode/
+
+
+# Git y metadatos
+.git/
+.gitignore
+
+
