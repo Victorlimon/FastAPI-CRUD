@@ -1,18 +1,20 @@
 import asyncpg
 from contextlib import asynccontextmanager
 from core.config import settings
-#from core.config import settings  # Importa la configuracióv
+
 
 class Database:
     def __init__(self):
         self.pool = None
 
+    
     async def connect(self):
         self.pool = await asyncpg.create_pool(
-            dsn=settings.DB_URL,  # Usa la variable de entorno
+            dsn=settings.DB_URL, 
             min_size=2,
             max_size=10,
-            timeout=30
+            timeout=30,
+            
         )
 
     async def disconnect(self):

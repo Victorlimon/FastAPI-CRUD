@@ -4,16 +4,22 @@ from typing import Annotated
 from models.user import User
 from core.dependencies import get_current_active_user
 from models.user import UserDB, UserUpdateRequest
-
+from core.config import settings
 
 
 router = APIRouter( tags=["users"])
 service = UserService()
 
 
-@router.get("/", response_model=list[User])  # <-- Nuevo endpoint
+
+@router.get("/", response_model=list[User])  
 async def list_users():
     return await service.get_all_users()
+
+@router.get("/perri")  
+async def setting():
+    return [settings.DB_URL]
+
 
 @router.get("/me", response_model=User)
 async def read_users_me(

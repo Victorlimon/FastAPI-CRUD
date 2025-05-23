@@ -6,10 +6,7 @@
 
 # Archivos del sistema
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.db
+
 
 # Config del editor
 .vscode/
