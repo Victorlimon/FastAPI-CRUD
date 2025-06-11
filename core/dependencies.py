@@ -2,22 +2,22 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError
 from core.config import settings
-from core.security import verify_password
-from repository.user import UserRepository
-from models.user import User
+from repository.usuario import UsuarioRepository
+from models.usuario import UsuarioDep
 import jwt
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 
-async def get_user_repository() -> UserRepository:
-    return UserRepository()
+async def get_user_repository() -> UsuarioRepository:
+    return UsuarioRepository()
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    user_repo: UserRepository = Depends(get_user_repository)
-) -> User:
+    user_repo: UsuarioRepository = Depends(get_user_repository)
+) -> UsuarioDep:
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -37,10 +37,30 @@ async def get_current_user(
     return user
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
-    if current_user.disabled:
+    current_user: UsuarioDep = Depends(get_current_user),
+) -> UsuarioDep:
+    if not current_user.activo:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
+async def get_current_user_cliente(
+    current_user: UsuarioDep = Depends(get_current_active_user)
+) -> UsuarioDep:
+    if current_user.rol != "cliente":
+        raise HTTPException(status_code=400, detail="Acceso denegado")
+    return current_user
+
+async def get_current_user_admin(
+    current_user: UsuarioDep = Depends(get_current_active_user)
+) -> UsuarioDep:
+    if current_user.rol != "admin":
+        raise HTTPException(status_code=400, detail="Acceso denegado")
+    return current_user
+
+async def get_current_user_restaurante(
+    current_user: UsuarioDep = Depends(get_current_active_user)
+) -> UsuarioDep:
+    if current_user.rol != "restaurante":
+        raise HTTPException(status_code=400, detail="Acceso denegado")
+    return current_user
 

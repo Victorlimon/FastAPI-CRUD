@@ -1,31 +1,43 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from services.user import UserService
+from services.usuario import UsuarioService
 from typing import Annotated
-from models.user import User
-from core.dependencies import get_current_active_user
-from models.user import UserDB, UserUpdateRequest
+from models.usuario import Usuario, UserRoleUpdate
+from core.dependencies import get_current_active_user, get_current_user_cliente, get_current_user_admin
 from core.config import settings
 
 
-router = APIRouter(tags=["users"], prefix="/users")
-service = UserService()
+router = APIRouter( tags=["usuarios"], prefix="/users")
+service = UsuarioService()
 
 
-
-@router.get("/", response_model=list[User])  
-async def list_users():
+@router.get("/", response_model=list[Usuario])  
+async def list_users(
+    current_user: Annotated[Usuario, Depends(get_current_user_admin)]
+):
     return await service.get_all_users()
 
-@router.get("/perri")  
-async def setting():
-    return [settings.DB_URL]
 
-
-@router.get("/me", response_model=User)
+@router.get("/me", response_model=Usuario)
 async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[Usuario, Depends(get_current_active_user)]
 ):
     return current_user
+
+@router.patch("/{username}/role")
+async def update_user_role(
+    username: str,
+    rol: UserRoleUpdate,
+    current_user: Usuario = Depends(get_current_user_admin)
+    ):
+    return await service.update_user_rol_service(
+        username=username,
+        rol=rol,
+    )
+
+
+'''
+
+
 
 @router.get("/{username}")
 async def user(username: str):
@@ -61,3 +73,4 @@ async def update_user(
         username=username,
         update_data=update_data,
     )
+'''

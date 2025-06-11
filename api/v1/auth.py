@@ -8,11 +8,11 @@ from services.usuario import UsuarioService
 from core.config import settings
 
 
-router = APIRouter()
+router = APIRouter( tags=["autentificacion"], prefix="/auth")
 
 service = UsuarioService()
 
-@router.post("/token", tags=["auth"])
+@router.post("/login")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -25,7 +25,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "username": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username, "username": user.username}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="Bearer")
 
