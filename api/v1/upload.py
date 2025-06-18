@@ -47,7 +47,7 @@ class MotorizadoResponse(BaseModel):
 
 
 
-@router.post("/uploadfile/")
+@router.post("/upload-db-excel/")
 async def create_upload_file(
     file: UploadFile,
     current_user:  Annotated[Usuario, Depends(get_current_user_admin)]
@@ -56,15 +56,15 @@ async def create_upload_file(
     if not file.filename.endswith(('.xlsx', 'xls', '.xlsm')):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Formato inválido. Solo se aceptan archivos Excel (.xlsx, .xls)"
+            detail="Formato inválido. Solo se aceptan archivos Excel (.xlsx, .xls, .xlsm)"
         )
     
     try:
         wb = openpyxl.load_workbook(file.file)
         datos = wb.active
         
-        cabezera_datos = ["nombre", "apellido", "edad"] # Caebecera de datos definidos y esperados en el archivo excel
-        #datos_cabezera = ["usuario", "nombre_completo", "correo", "contrasenia", "telefono", "rol", "activo"]
+        #cabezera_datos = ["nombre", "apellido", "edad"] # Caebecera de datos definidos y esperados en el archivo excel
+        cabezera_datos = ["usuario", "nombre_completo", "correo", "contrasenia", "telefono", "rol", "activo"]
         primera_fila = [cell.value for cell in datos[1]] # Se obtiene la primera fila del archivo que son las cabeceras
         if primera_fila != cabezera_datos:
             raise HTTPException(
@@ -99,14 +99,14 @@ async def download_database_excel(
     ):
     
     datos_db = await service.get_all_users()
-
+    
     # Verificar y convertir los datos a DataFrame
     if not datos_db:
         raise HTTPException(
             status_code=status.HTTP_200_OK,
             detail="no hay datos para descargar"
         )
-
+    
     datos = [{
         "username": db.username,
         "full_name": db.full_name,
@@ -120,25 +120,21 @@ async def download_database_excel(
     df["activo"] = df["activo"].astype(str)
     # Esta línea limpia solo la columna 'rol'
     df["rol"] = df["rol"].apply(lambda x: x.value if isinstance(x, Enum) else x)
-
-    output = BytesIO()
+    
+    output = BytesIO() # Crear un un espacio en memoria
     
     # Crear el Excel
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, sheet_name='Datos', index=False)
         
     output.seek(0)
-
+    
     headers = {
             "Content-Disposition": "attachment; filename=exportacion_datos.xlsx",
             "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         }
-
+    
     return Response(content=output.read() ,headers=headers, media_type=headers["Content-Type"])
-
-
-
-
 
 
 
@@ -146,7 +142,10 @@ async def download_database_excel(
 
 """
 
-CREATE TABLE empleados (
+CREATE TYPE rol_usuario AS ENUM ('cliente', 'motorizado', 'admin', 'restaurante');
+
+
+CREATE TABLE Usuario (
     id SERIAL PRIMARY KEY,
     codigo_empleado VARCHAR(30) UNIQUE NOT NULL, -- ej: MOTORIZADO-001
     nombres VARCHAR(100) NOT NULL,
